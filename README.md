@@ -133,9 +133,9 @@ Time-Series-Analysis/
 ---
 
 ## 📄 License
-Specify your license here (e.g., MIT, Apache 2.0)
+MIT
 
 ---
 
 ## 📬 Contact
-For questions, issues, or collaboration, open an issue or contact [your.email@domain.com]. 
+For questions, issues, or collaboration, open an issue or contact [vishalyep1022@gmail.com]. 
