@@ -12,4 +12,3 @@ jupyter
 streamlit
 shap
 optuna
-tensorflow
