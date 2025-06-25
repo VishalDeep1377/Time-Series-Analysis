@@ -1,0 +1,15 @@
+yfinance
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+scikit-learn
+statsmodels
+prophet
+tqdm
+jupyter
+streamlit
+shap
+optuna
+tensorflow
