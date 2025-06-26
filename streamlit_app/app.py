@@ -3,63 +3,15 @@ import pandas as pd
 import plotly.graph_objs as go
 import os
 
-st.set_page_config(page_title='Advanced Stock Analysis & Forecasting', layout='wide')
+st.set_page_config(page_title='Advanced Stock Analysis & Forecasting', layout='wide', page_icon='📈')
 
 # --- Custom CSS for a Professional Look ---
+# Removed custom CSS that affected layout responsiveness. Only keep essential dark theme.
 st.markdown('''
     <style>
     body, .stApp {
         background-color: #18191A !important;
         color: #F5F6F7 !important;
-        font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-    }
-    .stButton>button {
-        background-color: #00BFFF !important;
-        color: white !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        font-weight: 600;
-        padding: 0.5em 2em;
-        margin: 0.5em 0;
-    }
-    .stSidebar, .css-1d391kg, .css-1lcbmhc, .css-1v0mbdj, .css-1cypcdb {
-        background-color: #22232A !important;
-        color: #F5F6F7 !important;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-    }
-    .stSelectbox>div>div {
-        background-color: #242526 !important;
-        color: #F5F6F7 !important;
-        border-radius: 8px !important;
-    }
-    .stDownloadButton>button {
-        background-color: #242526 !important;
-        color: #00BFFF !important;
-        border-radius: 8px !important;
-        font-weight: 600;
-        border: 1px solid #00BFFF !important;
-    }
-    .stMetric {
-        background: #22232A !important;
-        border-radius: 8px;
-        padding: 1em;
-        color: #00BFFF !important;
-        font-weight: 700;
-    }
-    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
-        color: #00BFFF !important;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-    .stPlotlyChart {
-        background: #18191A !important;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-        padding: 1em;
-    }
-    .stAlert {
-        border-radius: 8px;
     }
     </style>
 ''', unsafe_allow_html=True)
@@ -95,10 +47,18 @@ ticker_to_name = {
     '^GSPC': 'S&P 500 Index',
 }
 
-# --- Sidebar ---
-st.sidebar.title('Navigation')
-page = st.sidebar.radio('Go to:', ['EDA & Indicators', 'Forecasting', 'Summary & Insights', 'How to Read Charts'])
-
+# --- Sidebar with Logo and Navigation ---
+st.sidebar.markdown('<img src="https://img.icons8.com/fluency/96/000000/line-chart.png" class="logo-img" alt="Logo"/>', unsafe_allow_html=True)
+st.sidebar.title('Stock Analysis & Forecasting')
+st.sidebar.markdown('''
+Welcome! Use the navigation below to explore:
+''')
+page = st.sidebar.radio('Go to:', [
+    'EDA & Indicators',
+    'Forecasting',
+    'Summary & Insights',
+    'How to Read Charts'
+])
 st.sidebar.markdown('---')
 
 # Build a list of display names for the selectbox
@@ -111,16 +71,15 @@ company_name = ticker_to_name.get(ticker, ticker)
 
 # --- Forecast Horizon Selection ---
 st.sidebar.markdown('---')
-st.sidebar.markdown('**Select Forecast Horizon (days)**')
+st.sidebar.markdown('Select Forecast Horizon (days)')
 forecast_horizons = [7, 30, 90, 180]
 horizon = st.sidebar.selectbox('Forecast Horizon', forecast_horizons, index=forecast_horizons.index(30))
 
 # --- Main Content ---
-st.title('Advanced Stock Analysis & Forecasting App')
-st.markdown('''
-This app provides advanced, interactive stock analysis and forecasting using ARIMA, Prophet, and SARIMA models. 
-Select a stock and explore technical indicators, model predictions, and actionable insights. 
-''')
+st.markdown('<div style="background:linear-gradient(90deg,#00BFFF 0,#22232A 100%);padding:2em 1em 1em 1em;border-radius:16px;margin-bottom:2em;">\
+<h1 style="color:#fff;font-size:2.5em;font-weight:800;margin-bottom:0.2em;">Advanced Stock Analysis & Forecasting App</h1>\
+<p style="color:#F5F6F7;font-size:1.2em;">Interactive stock analysis and forecasting using ARIMA, Prophet, and SARIMA models. Select a stock and explore technical indicators, model predictions, and actionable insights.</p>\
+</div>', unsafe_allow_html=True)
 
 # --- Load Data ---
 df = load_features()
@@ -135,129 +94,116 @@ def load_model_results_horizon(ticker, horizon):
 model_results = load_model_results_horizon(ticker, horizon)
 
 # --- EDA & Indicators Page ---
-if page == 'EDA & Indicators':
+if page.startswith('EDA'):
     st.header(f'Exploratory Data Analysis & Technical Indicators: {company_name} ({ticker})')
-    st.markdown('''
-    This section helps you understand the stock's behavior using popular technical indicators. Each chart includes a tip on what to look for.
-    ''')
-
+    st.info('This section helps you understand the stock\'s behavior using popular technical indicators. Each chart includes a tip on what to look for.')
+    # --- Metrics Row ---
+    col1, col2, col3 = st.columns(3)
+    col1.metric('Latest Close', f"{df_stock['Close'].iloc[-1]:.2f}")
+    col2.metric('20d SMA', f"{df_stock['SMA_20'].iloc[-1]:.2f}")
+    col3.metric('RSI 14', f"{df_stock['RSI_14'].iloc[-1]:.2f}")
+    st.markdown('---')
     # --- Close Price with SMA & EMA ---
-    st.subheader('1. Close Price with SMA & EMA')
-    st.markdown('''
-    **Shows the trend direction.** If the price is above the moving averages, the stock is generally trending up.
-    
-    **What to look for:**
-    - Price crossing above SMA/EMA: possible uptrend (buy signal)
-    - Price crossing below: possible downtrend (sell signal)
-    ''')
+    st.subheader('Close Price with SMA & EMA')
+    with st.expander('What to look for'):
+        st.markdown('''
+        - Price crossing above SMA/EMA: possible uptrend (buy signal)
+        - Price crossing below: possible downtrend (sell signal)
+        ''')
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['Close'], mode='lines', name='Close', line=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['SMA_20'], mode='lines', name='SMA 20', line=dict(color='orange')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['SMA_50'], mode='lines', name='SMA 50', line=dict(color='green')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['EMA_20'], mode='lines', name='EMA 20', line=dict(color='red')))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['Close'], mode='lines', name='Close', line=dict(color='#00BFFF', width=2)))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['SMA_20'], mode='lines', name='SMA 20', line=dict(color='#FFA500', width=2)))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['SMA_50'], mode='lines', name='SMA 50', line=dict(color='#32CD32', width=2)))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['EMA_20'], mode='lines', name='EMA 20', line=dict(color='#FF6347', width=2)))
     fig.update_layout(title='Close Price with SMA & EMA', xaxis_title='Date', yaxis_title='Price', legend_title='Legend',
-                     font=dict(size=14), plot_bgcolor='white', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
+                     font=dict(size=14), template='plotly_dark', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True),
+                     margin=dict(l=40, r=40, t=60, b=40))
     st.plotly_chart(fig, use_container_width=True)
-
     # --- RSI ---
-    st.subheader('2. RSI (Relative Strength Index)')
-    st.markdown('''
-    **Measures if a stock is overbought or oversold.**
-    
-    **What to look for:**
-    - RSI above 70: overbought (stock may decrease soon)
-    - RSI below 30: oversold (stock may increase soon)
-    ''')
+    st.subheader('RSI (Relative Strength Index)')
+    with st.expander('What to look for'):
+        st.markdown('''
+        - RSI above 70: overbought (stock may decrease soon)
+        - RSI below 30: oversold (stock may increase soon)
+        ''')
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['RSI_14'], mode='lines', name='RSI 14', line=dict(color='purple')))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['RSI_14'], mode='lines', name='RSI 14', line=dict(color='#A020F0', width=2)))
     fig.add_hline(y=70, line_dash='dash', line_color='red', annotation_text='Overbought (70)', annotation_position='top left')
     fig.add_hline(y=30, line_dash='dash', line_color='green', annotation_text='Oversold (30)', annotation_position='bottom left')
-    fig.update_layout(title='RSI (14)', xaxis_title='Date', yaxis_title='RSI', font=dict(size=14), plot_bgcolor='white', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
+    fig.update_layout(title='RSI (14)', xaxis_title='Date', yaxis_title='RSI', font=dict(size=14), template='plotly_dark', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True),
+                     margin=dict(l=40, r=40, t=60, b=40))
     st.plotly_chart(fig, use_container_width=True)
-
     # --- MACD ---
-    st.subheader('3. MACD (Moving Average Convergence Divergence)')
-    st.markdown('''
-    **Shows momentum and trend changes.**
-    
-    **What to look for:**
-    - MACD crossing above Signal Line: possible uptrend (buy signal)
-    - MACD crossing below: possible downtrend (sell signal)
-    ''')
+    st.subheader('MACD (Moving Average Convergence Divergence)')
+    with st.expander('What to look for'):
+        st.markdown('''
+        - MACD crossing above Signal Line: possible uptrend (buy signal)
+        - MACD crossing below: possible downtrend (sell signal)
+        ''')
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['MACD'], mode='lines', name='MACD', line=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['MACD_Signal'], mode='lines', name='Signal Line', line=dict(color='red')))
-    fig.update_layout(title='MACD', xaxis_title='Date', yaxis_title='MACD', font=dict(size=14), plot_bgcolor='white', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['MACD'], mode='lines', name='MACD', line=dict(color='#00BFFF', width=2)))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['MACD_Signal'], mode='lines', name='Signal Line', line=dict(color='#FF6347', width=2)))
+    fig.update_layout(title='MACD', xaxis_title='Date', yaxis_title='MACD', font=dict(size=14), template='plotly_dark', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True),
+                     margin=dict(l=40, r=40, t=60, b=40))
     st.plotly_chart(fig, use_container_width=True)
-
     # --- Bollinger Bands ---
-    st.subheader('4. Bollinger Bands')
-    st.markdown('''
-    **Shows volatility and price extremes.**
-    
-    **What to look for:**
-    - Price touching upper band: stock may be overbought (could decrease)
-    - Price touching lower band: stock may be oversold (could increase)
-    - Wide bands: high volatility; narrow bands: low volatility
-    ''')
+    st.subheader('4️⃣ Bollinger Bands')
+    with st.expander('ℹ️ What to look for'):
+        st.markdown('''
+        - Price touching upper band: stock may be overbought (could decrease)
+        - Price touching lower band: stock may be oversold (could increase)
+        - Wide bands: high volatility; narrow bands: low volatility
+        ''')
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['Close'], mode='lines', name='Close', line=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['BB_Middle'], mode='lines', name='BB Middle', line=dict(color='orange')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['BB_Upper'], mode='lines', name='BB Upper', line=dict(color='green', dash='dash')))
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['BB_Lower'], mode='lines', name='BB Lower', line=dict(color='red', dash='dash')))
-    # Shaded area between bands
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['Close'], mode='lines', name='Close', line=dict(color='#00BFFF', width=2)))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['BB_Middle'], mode='lines', name='BB Middle', line=dict(color='#FFA500', width=2)))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['BB_Upper'], mode='lines', name='BB Upper', line=dict(color='#32CD32', width=2, dash='dash')))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['BB_Lower'], mode='lines', name='BB Lower', line=dict(color='#FF6347', width=2, dash='dash')))
     fig.add_traces([
         go.Scatter(
             x=pd.concat([df_stock['Date'], df_stock['Date'][::-1]]),
             y=pd.concat([df_stock['BB_Upper'], df_stock['BB_Lower'][::-1]]),
             fill='toself',
-            fillcolor='rgba(200,200,200,0.2)',
+            fillcolor='rgba(0,191,255,0.1)',
             line=dict(color='rgba(255,255,255,0)'),
             hoverinfo='skip',
             showlegend=False
         )
     ])
-    fig.update_layout(title='Bollinger Bands', xaxis_title='Date', yaxis_title='Price', font=dict(size=14), plot_bgcolor='white', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
+    fig.update_layout(title='Bollinger Bands', xaxis_title='Date', yaxis_title='Price', font=dict(size=14), template='plotly_dark', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
     st.plotly_chart(fig, use_container_width=True)
-
     # --- Volatility ---
-    st.subheader('5. Volatility (20-day Rolling Std Dev)')
-    st.markdown('''
-    **Shows how much the price moves (risk).**
-    
-    **What to look for:**
-    - High volatility = bigger price swings (riskier)
-    - Low volatility = stable price
-    ''')
+    st.subheader('5️⃣ Volatility (20-day Rolling Std Dev)')
+    with st.expander('ℹ️ What to look for'):
+        st.markdown('''
+        - High volatility = bigger price swings (riskier)
+        - Low volatility = stable price
+        ''')
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['Volatility_20'], mode='lines', name='20-day Volatility', line=dict(color='brown')))
-    fig.update_layout(title='20-day Rolling Volatility', xaxis_title='Date', yaxis_title='Volatility', font=dict(size=14), plot_bgcolor='white', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
+    fig.add_trace(go.Scatter(x=df_stock['Date'], y=df_stock['Volatility_20'], mode='lines', name='20-day Volatility', line=dict(color='#8B4513', width=2)))
+    fig.update_layout(title='20-day Rolling Volatility', xaxis_title='Date', yaxis_title='Volatility', font=dict(size=14), template='plotly_dark', xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
     st.plotly_chart(fig, use_container_width=True)
 
 # --- Forecasting Page ---
-elif page == 'Forecasting':
-    st.header(f'Model Forecasts: {company_name} ({ticker})')
+elif page.startswith('Forecasting'):
+    st.header(f'🤖 Model Forecasts: {company_name} ({ticker})')
     if model_results is not None:
-        st.markdown('''
-        **Compare model predictions for the selected forecast horizon.**
-        - **Actual**: True closing price
-        - **ARIMA, SARIMA**: Model forecasts
-        ''')
+        st.info('Compare model predictions for the selected forecast horizon. Download the data or hover for details!')
         models = ['ARIMA_Forecast', 'SARIMA_Forecast']
         model_display_names = {'ARIMA_Forecast': 'ARIMA', 'SARIMA_Forecast': 'SARIMA'}
         selected_models = st.multiselect('Select models to display:', [model_display_names[m] for m in models], default=[model_display_names[m] for m in models])
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=model_results['Date'], y=model_results['Actual'], mode='lines', name='Actual', line=dict(color='black')))
-        colors = ['red', 'magenta']
+        fig.add_trace(go.Scatter(x=model_results['Date'], y=model_results['Actual'], mode='lines', name='Actual', line=dict(color='#F5F6F7', width=2)))
+        colors = ['#FF6347', '#00BFFF']
         for i, m in enumerate(models):
             display_name = model_display_names[m]
             if display_name in selected_models and m in model_results.columns:
-                fig.add_trace(go.Scatter(x=model_results['Date'], y=model_results[m], mode='lines', name=display_name, line=dict(color=colors[i], dash='dash')))
-        fig.update_layout(title='Actual vs. Model Forecasts', xaxis_title='Date', yaxis_title='Close Price')
+                fig.add_trace(go.Scatter(x=model_results['Date'], y=model_results[m], mode='lines', name=display_name, line=dict(color=colors[i], dash='dash', width=2)))
+        fig.update_layout(title='Actual vs. Model Forecasts', xaxis_title='Date', yaxis_title='Close Price', template='plotly_dark')
         st.plotly_chart(fig, use_container_width=True)
         # Downloadable CSV
         st.download_button(
-            label='Download Forecast Data as CSV',
+            label='⬇️ Download Forecast Data as CSV',
             data=model_results.to_csv(index=False).encode('utf-8'),
             file_name=f'{ticker}_forecast_{horizon}d.csv',
             mime='text/csv'
@@ -275,48 +221,39 @@ elif page == 'Forecasting':
         st.warning('No model results available for this stock.')
 
 # --- Summary & Insights Page ---
-elif page == 'Summary & Insights':
-    st.header(f'Summary & Insights: {company_name} ({ticker})')
-    st.markdown('''
-    - **Latest Model Signals:**
-    ''')
+elif page.startswith('Summary'):
+    st.header(f'💡 Summary & Insights: {company_name} ({ticker})')
+    st.info('Use the trend arrows to quickly see if the models expect the stock to go up or down. Use the EDA page to understand why (look for overbought/oversold, volatility, etc). Use the Forecasting page to compare models and see which is most accurate.')
     if model_results is not None:
         last_row = model_results.iloc[-1]
         prev_row = model_results.iloc[-2]
         models = ['ARIMA_Forecast', 'SARIMA_Forecast']
         model_display_names = {'ARIMA_Forecast': 'ARIMA', 'SARIMA_Forecast': 'SARIMA'}
-        for m in models:
+        col1, col2, col3 = st.columns(3)
+        for i, m in enumerate(models):
             display_name = model_display_names[m]
             if m in model_results.columns:
                 trend = '↑' if last_row[m] > prev_row[m] else '↓'
-                st.markdown(f"- **{display_name}:** {trend} ({'Up' if trend=='↑' else 'Down'})")
-        st.markdown('---')
-        st.markdown('**Latest Actual Price:**')
-        st.metric('Actual', f"{last_row['Actual']:.2f}")
-        st.markdown('**Model Forecasts:**')
-        for m in models:
+                col1.metric(f'{display_name} Trend', f"{trend}")
+        col2.metric('Actual', f"{last_row['Actual']:.2f}")
+        for i, m in enumerate(models):
             display_name = model_display_names[m]
             if m in model_results.columns:
-                st.metric(display_name, f"{last_row[m]:.2f}")
-        # Downloadable CSV
+                col3.metric(display_name, f"{last_row[m]:.2f}")
         st.download_button(
-            label='Download Forecast Data as CSV',
+            label='⬇️ Download Forecast Data as CSV',
             data=model_results.to_csv(index=False).encode('utf-8'),
             file_name=f'{ticker}_forecast_{horizon}d.csv',
             mime='text/csv'
         )
     else:
         st.warning('No model results available for this stock.')
-    st.markdown('---')
-    st.markdown('''
-    **How to use:**
-    - Use the trend arrows to quickly see if the models expect the stock to go up or down.
-    - Use the EDA page to understand why (look for overbought/oversold, volatility, etc).
-    - Use the Forecasting page to compare models and see which is most accurate.
-    ''')
 
 # --- How to Read Charts Page ---
-elif page == 'How to Read Charts':
-    st.header('How to Read the Charts')
-    st.markdown(open('notebooks/how_to_read_charts.md').read())
-    st.info('For more details, see the documentation or ask your team lead!') 
+elif page.startswith('How'):
+    st.header('📚 How to Read the Charts')
+    st.info('For more details, see the documentation or ask your team lead!')
+    try:
+        st.markdown(open('notebooks/how_to_read_charts.md').read())
+    except Exception:
+        st.warning('Help file not found.') 
